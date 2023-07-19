@@ -1,5 +1,6 @@
 // DOM elements
 const form = document.getElementById("form");
+const modalBody = document.querySelector(".modal-body");
 const firstName = document.getElementById("first");
 const lastName = document.getElementById("last");
 const email = document.getElementById("email");
@@ -7,17 +8,17 @@ const birthdate = document.getElementById("birthdate");
 const quantity = document.getElementById("quantity");
 const city = document.querySelector("#location1");
 const useConditions = document.getElementById("checkbox1");
-const newsletter = document.getElementById("checkbox2");
 
 // messages d'erreur
 const errorMsg = {
-	firstName: "Le prénom doit comporter au moins 2 caractères",
-	lastName: "Le nom doit comporter au moins 2 caractères",
+	firstName: "Veuillez entrer 2 caractères ou plus pour le champ du prénom.",
+	lastName: "Veuillez entrer 2 caractères ou plus pour le champ du nom.",
 	email: "L'adresse email n'est pas valide",
-	birthdate: "La date de naissance n'est pas valide",
-	quantity: "Veuillez entrer un nombre entre 0 et 9999",
-	city: "Veuillez selectionner une ville",
-	useConditions: "Veuillez accepter les conditions d'utilisation",
+	birthdate: "Vous devez entrer votre date de naissance.",
+	quantity: "Veuillez entrer un nombre entre 0 et 99",
+	city: "Vous devez choisir une option.",
+	useConditions:
+		"Vous devez vérifier que vous acceptez les termes et conditions.",
 };
 
 // afficher ou enlever messages d'erreur
@@ -33,7 +34,7 @@ function showErrorMessage(element, message) {
 
 // check nom et prenom
 function nameCheck(element, message) {
-	const regEx = new RegExp(/^[a-zA-Z-_]{2,}$/);
+	const regEx = new RegExp(/^[a-zA-Z -_]{2,}$/);
 
 	if (!regEx.test(element.value) || element === "") {
 		showErrorMessage(element, message);
@@ -62,8 +63,10 @@ function emailCheck(email, message) {
 // check date de naissance
 function birthdateCheck(birthdate, message) {
 	const regEx = new RegExp(/[0-9]{4}-[0-9]{2}-[0-9]{2}/);
+	const currentDate = new Date().getTime();
+	const enteredDate = new Date(birthdate.value).getTime();
 
-	if (!regEx.test(birthdate.value)) {
+	if (!regEx.test(birthdate.value) || enteredDate > currentDate) {
 		showErrorMessage(birthdate, message);
 		return false;
 	} else {
@@ -80,7 +83,7 @@ function quantityCheck(quantity, message) {
 		!regEx.test(quantity.value) ||
 		quantity === "" ||
 		quantity < 0 ||
-		quantity > 9999
+		quantity > 100
 	) {
 		showErrorMessage(quantity, message);
 		return false;
@@ -91,7 +94,9 @@ function quantityCheck(quantity, message) {
 }
 // check cities
 function cityCheck(message) {
-	let checkedCity = document.querySelector("input[name='location']:checked");
+	const checkedCity = document.querySelector(
+		"input[name='location']:checked"
+	);
 
 	if (!checkedCity) {
 		showErrorMessage(city, message);
@@ -112,6 +117,31 @@ function useConditionsCheck(useConditions, message) {
 		return true;
 	}
 }
+
+// Listeners on blur
+firstName.addEventListener("blur", () => {
+	nameCheck(firstName, errorMsg.firstName);
+});
+
+lastName.addEventListener("blur", () => {
+	nameCheck(lastName, errorMsg.lastName);
+});
+
+email.addEventListener("blur", () => {
+	emailCheck(email, errorMsg.email);
+});
+
+birthdate.addEventListener("blur", () => {
+	birthdateCheck(birthdate, errorMsg.birthdate);
+});
+
+quantity.addEventListener("blur", () => {
+	quantityCheck(quantity, errorMsg.quantity);
+});
+
+document.getElementById("cities").addEventListener("click", () => {
+	cityCheck(errorMsg.city);
+});
 
 // form validation
 function formValidation() {
@@ -135,19 +165,60 @@ function formValidation() {
 		cityVal &&
 		useConditionsVal
 	) {
-		console.log("good");
+		return true;
 	} else {
-		console.log("bad");
+		return false;
+	}
+}
+
+const html = `
+	<div class="confirmation">
+		<h2>Merci ! Votre réservation a été reçue.</h2>
+		<button class="btn-submit" id="close-modal">Fermer</button>
+	</div>
+`;
+
+// confirmation modal
+function showConfirmation() {
+	const formVal = formValidation();
+
+	if (formVal) {
+		form.style.display = "none";
+		modalBody.insertAdjacentHTML("beforeend", html);
+		console.log(formVal);
 	}
 }
 
 form.addEventListener("submit", e => {
 	e.preventDefault();
-	formValidation();
+	showConfirmation();
 });
 
-// validation on submit ou event listeners
-//  click on backdrop: remove modal
-// ajouter modal confirmation
-// dernier input
-// background-img CSS:17
+// reset form
+function reset() {
+	const checkedCity = document.querySelector(
+		"input[name='location']:checked"
+	);
+
+	firstName.value = "";
+	lastName.value = "";
+	email.value = "";
+	birthdate.value = "";
+	quantity.value = "";
+	if (document.querySelector("input[name='location']:checked")) {
+		checkedCity.checked = false;
+	}
+}
+
+// close confirmation modal
+document.addEventListener("click", e => {
+	const modalbg = document.querySelector(".bground");
+	const target = e.target.closest("#close-modal");
+
+	if (target) {
+		reset();
+		modalbg.style.display = "none";
+		form.style.display = "block";
+		document.querySelector(".confirmation").style.display = "none";
+	}
+});
