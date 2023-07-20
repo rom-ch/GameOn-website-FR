@@ -81,10 +81,11 @@ function quantityCheck(quantity, message) {
 
 	if (
 		!regEx.test(quantity.value) ||
-		quantity === "" ||
-		quantity < 0 ||
-		quantity > 100
+		quantity.value === "" ||
+		quantity.value < 0 ||
+		quantity.value > 99
 	) {
+		console.log(quantity);
 		showErrorMessage(quantity, message);
 		return false;
 	} else {
